@@ -103,3 +103,6 @@ node index.js
 ```
 
 4. Acesse a aplicação: 
+```bash
+http:localhost:3000
+```
