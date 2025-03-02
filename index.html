@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Installer - SSH Terminal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #00b4d8;
+            --secondary-color: #90e0ef;
+            --success-color: #4CAF50;
+            --error-color: #ef233c;
+            --text-color: #e0e0e0;
+            --text-secondary: #90a4ae;
+            --border-color: #37474f;
+            --background-color: #1a1a1a;
+            --surface-color: #242424;
+            --hover-color: #2c2c2c;
+            --card-background: #2a2a2a;
+            --section-spacing: 40px;
+            --card-height: 180px;
+            --gradient-primary: linear-gradient(135deg, #00b4d8, #0077b6);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --modal-background: #242424;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background-color: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            color: #fff;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--shadow-color);
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .form-section {
+            background: var(--surface-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px var(--shadow-color);
+            margin-bottom: var(--section-spacing);
+            border: 1px solid var(--border-color);
+        }
+
+        h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        h4 {
+            color: var(--secondary-color);
+            margin: var(--section-spacing) 0 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background: var(--card-background);
+            border-left: 4px solid var(--primary-color);
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .packages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: var(--section-spacing);
+        }
+
+        .package-button {
+            height: var(--card-height);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .package-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px var(--shadow-color);
+            background: var(--hover-color);
+            border-color: var(--primary-color);
+        }
+
+        .package-button.selected {
+            background: var(--hover-color);
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 15px rgba(0, 180, 216, 0.3);
+        }
+
+        .package-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .package-button:hover .package-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .package-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .package-description {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .ssh-form {
+            background-color: #363636;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ff00;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #2d2d2d;
+            color: #fff;
+            font-family: 'Consolas', monospace;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ff00;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+        }
+
+        .terminal {
+            background-color: #000;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            color: #00ff00;
+            height: 400px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .terminal-title {
+            color: #00ff00;
+            font-size: 0.9em;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+        }
+
+        .terminal-close { background-color: #ff5f56; }
+        .terminal-minimize { background-color: #ffbd2e; }
+        .terminal-maximize { background-color: #27c93f; }
+
+        .terminal-content {
+            height: calc(100% - 30px);
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .terminal-input {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .terminal-prompt {
+            color: #00ff00;
+            margin-right: 10px;
+        }
+
+        .terminal-command {
+            background: none;
+            border: none;
+            color: #00ff00;
+            font-family: 'Consolas', monospace;
+            flex-grow: 1;
+            outline: none;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #00ff00;
+            color: #000;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .button:hover {
+            background-color: #00cc00;
+        }
+
+        .status {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .status.success {
+            background-color: #27c93f33;
+            color: #27c93f;
+            border: 1px solid #27c93f;
+        }
+
+        .status.error {
+            background-color: #ff5f5633;
+            color: #ff5f56;
+            border: 1px solid #ff5f56;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .terminal {
+                height: 300px;
+            }
+        }
+
+        /* Estilos do Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--modal-background);
+            width: 90%;
+            max-width: 600px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--error-color);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modal-icon {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .modal-details {
+            background: var(--card-background);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .detail-item {
+            margin-bottom: 15px;
+        }
+
+        .detail-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+        }
+
+        .detail-text {
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-button.primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .modal-button.secondary {
+            background-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .modal-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Web Installer</h1>
+            <p>Instalador de Aplicações Linux via SSH</p>
+        </header>
+
+        <div class="content">
+            <div class="ssh-form">
+                <form id="sshForm" onsubmit="return connectSSH(event)">
+                    <div class="form-group">
+                        <label for="host">Endereço do Servidor:</label>
+                        <input type="text" id="host" name="host" placeholder="Ex: 192.168.1.100" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="port">Porta SSH:</label>
+                        <input type="number" id="port" name="port" value="22" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username">Usuário:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Senha:</label>
+                        <div class="password-container">
+                            <input type="password" id="password" name="password" required>
+                            <button type="button" class="password-toggle">
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="button">Conectar</button>
+                </form>
+                <div id="status" class="status"></div>
+            </div>
+
+            <div class="main-content">
+                <div class="form-section">
+                    <h3>Pacotes Disponíveis</h3>
+                    
+                    <h4><i class="fas fa-server"></i> Servidores Web</h4>
+                    <div class="packages-grid">
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fa-solid fa-server"></i></i></div>
+                            <div class="package-name">Nginx</div>
+                            <div class="package-description">Servidor web de alto desempenho</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-globe"></i></div>
+                            <div class="package-name">Apache</div>
+                            <div class="package-description">Servidor web Apache2</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-bolt"></i></div>
+                            <div class="package-name">Lighttpd</div>
+                            <div class="package-description">Servidor web leve e rápido</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-balance-scale"></i></div>
+                            <div class="package-name">HAProxy</div>
+                            <div class="package-description">Balanceador de carga</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-box"></i></div>
+                            <div class="package-name">Caddy</div>
+                            <div class="package-description">Servidor web moderno</div>
+                        </div>
+                    </div>
+
+                    <h4><i class="fas fa-database"></i> Bancos de Dados</h4>
+                    <div class="packages-grid">
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-database"></i></div>
+                            <div class="package-name">MySQL</div>
+                            <div class="package-description">Banco de dados relacional</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-database"></i></div>
+                            <div class="package-name">PostgreSQL</div>
+                            <div class="package-description">Banco objeto-relacional</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-memory"></i></div>
+                            <div class="package-name">Redis</div>
+                            <div class="package-description">Cache em memória</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-couch"></i></div>
+                            <div class="package-name">CouchDB</div>
+                            <div class="package-description">Banco NoSQL documentos</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-project-diagram"></i></div>
+                            <div class="package-name">Cassandra</div>
+                            <div class="package-description">Banco NoSQL distribuído</div>
+                        </div>
+                    </div>
+
+                    <h4><i class="fas fa-shield-alt"></i> Segurança</h4>
+                    <div class="packages-grid">
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-shield-alt"></i></div>
+                            <div class="package-name">UFW</div>
+                            <div class="package-description">Firewall simplificado</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-lock"></i></div>
+                            <div class="package-name">Fail2ban</div>
+                            <div class="package-description">Proteção contra ataques</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-virus-slash"></i></div>
+                            <div class="package-name">ClamAV</div>
+                            <div class="package-description">Antivírus</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-key"></i></div>
+                            <div class="package-name">PiVPN</div>
+                            <div class="package-description">Instalador simplificado de VPN para Linux</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-user-shield"></i></div>
+                            <div class="package-name">Snort</div>
+                            <div class="package-description">Sistema IDS/IPS</div>
+                        </div>
+                    </div>
+
+                    <h4><i class="fas fa-chart-line"></i> Monitoramento</h4>
+                    <div class="packages-grid">
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-chart-bar"></i></div>
+                            <div class="package-name">Netdata</div>
+                            <div class="package-description">Monitoramento em tempo real</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="package-name">Grafana</div>
+                            <div class="package-description">Visualização de métricas</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            <div class="package-name">Zabbix</div>
+                            <div class="package-description">Monitoramento enterprise</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-chart-pie"></i></div>
+                            <div class="package-name">Prometheus</div>
+                            <div class="package-description">Coleta de métricas</div>
+                        </div>
+                    </div>
+
+                    <h4><i class="fab fa-docker"></i> Containers e Orquestração</h4>
+                    <div class="packages-grid">
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fab fa-docker"></i></div>
+                            <div class="package-name">Docker</div>
+                            <div class="package-description">Plataforma de containers</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-layer-group"></i></div>
+                            <div class="package-name">Docker Compose</div>
+                            <div class="package-description">Multi-container Docker</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon"><i class="fas fa-dharmachakra"></i></div>
+                            <div class="package-name">Kubernetes</div>
+                            <div class="package-description">Orquestração de containers</div>
+                        </div>
+                    </div>
+
+                    <h4>Mensageria e Cache</h4>
+                    <div class="packages-grid">
+                        <div class="package-button">
+                            <div class="package-icon">🐰</div>
+                            <div class="package-name">RabbitMQ</div>
+                            <div class="package-description">Sistema de mensageria</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon">📨</div>
+                            <div class="package-name">Apache Kafka</div>
+                            <div class="package-description">Streaming de eventos</div>
+                        </div>
+
+                        <div class="package-button">
+                            <div class="package-icon">💾</div>
+                            <div class="package-name">Memcached</div>
+                            <div class="package-description">Sistema de cache</div>
+                        </div>
+                    </div>
+
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <div class="terminal-button terminal-close"></div>
+                                <div class="terminal-button terminal-minimize"></div>
+                                <div class="terminal-button terminal-maximize"></div>
+                            </div>
+                            <div class="terminal-title">SSH Terminal</div>
+                        </div>
+                        <div id="terminal-content" class="terminal-content"></div>
+                        <div class="terminal-input">
+                            <span class="terminal-prompt">$</span>
+                            <input type="text" id="command" class="terminal-command" placeholder="Digite um comando..." disabled>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalhes do pacote -->
+    <div id="packageModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-icon"></div>
+                <h2 class="modal-title"></h2>
+            </div>
+            <div class="modal-details">
+                <div class="detail-item">
+                    <div class="detail-label">Descrição</div>
+                    <div class="detail-text description"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Recursos Principais</div>
+                    <div class="detail-text features"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Requisitos</div>
+                    <div class="detail-text requirements"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Comandos de Instalação</div>
+                    <div class="detail-text installation"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-button secondary close-modal">Fechar</button>
+                <button class="modal-button primary copy-command">Copiar Comando</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const terminalContent = document.getElementById('terminal-content');
+        const commandInput = document.getElementById('command');
+        const statusDiv = document.getElementById('status');
+        let isConnected = false;
+        let currentConnectionId = null;
+
+        function showStatus(message, isError = false) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${isError ? 'error' : 'success'}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function appendToTerminal(text, isError = false) {
+            const line = document.createElement('div');
+            line.textContent = text;
+            line.style.color = isError ? '#ff5f56' : '#00ff00';
+            terminalContent.appendChild(line);
+            terminalContent.scrollTop = terminalContent.scrollHeight;
+        }
+
+        async function connectSSH(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {
+                host: formData.get('host'),
+                port: formData.get('port'),
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            appendToTerminal(`Conectando a ${data.username}@${data.host}:${data.port}...`);
+
+            try {
+                const response = await fetch('/connect-ssh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    isConnected = true;
+                    currentConnectionId = result.connectionId;
+                    showStatus('Conectado com sucesso!');
+                    appendToTerminal('Conexão SSH estabelecida!');
+                    commandInput.disabled = false;
+                    commandInput.focus();
+                } else {
+                    showStatus(result.error, true);
+                    appendToTerminal(`Erro: ${result.error}`, true);
+                }
+            } catch (error) {
+                showStatus('Erro na conexão', true);
+                appendToTerminal(`Erro: ${error.message}`, true);
+            }
+        }
+
+        async function disconnect() {
+            if (!currentConnectionId) return;
+
+            try {
+                const response = await fetch('/disconnect-ssh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ connectionId: currentConnectionId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    isConnected = false;
+                    currentConnectionId = null;
+                    commandInput.disabled = true;
+                    showStatus('Desconectado com sucesso!');
+                    appendToTerminal('Conexão SSH encerrada.');
+                } else {
+                    showStatus(result.error, true);
+                    appendToTerminal(`Erro ao desconectar: ${result.error}`, true);
+                }
+            } catch (error) {
+                showStatus('Erro ao desconectar', true);
+                appendToTerminal(`Erro: ${error.message}`, true);
+            }
+        }
+
+        commandInput.addEventListener('keypress', async function(e) {
+            if (e.key === 'Enter' && this.value) {
+                const command = this.value;
+                this.value = '';
+                appendToTerminal(`$ ${command}`);
+
+                try {
+                    const response = await fetch('/execute-command', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            command,
+                            connectionId: currentConnectionId
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        if (result.output) {
+                            appendToTerminal(result.output);
+                        }
+                        if (result.error) {
+                            appendToTerminal(result.error, true);
+                        }
+                    } else {
+                        appendToTerminal(`Erro: ${result.error}`, true);
+                        if (result.error.includes('Conexão SSH não encontrada')) {
+                            isConnected = false;
+                            currentConnectionId = null;
+                            commandInput.disabled = true;
+                            showStatus('Conexão perdida. Por favor, conecte-se novamente.', true);
+                        }
+                    }
+                } catch (error) {
+                    appendToTerminal(`Erro: ${error.message}`, true);
+                }
+            }
+        });
+
+        // Adicionar botão de desconexão
+        const form = document.getElementById('sshForm');
+        const disconnectButton = document.createElement('button');
+        disconnectButton.type = 'button';
+        disconnectButton.className = 'button';
+        disconnectButton.style.marginTop = '10px';
+        disconnectButton.style.backgroundColor = '#ff5f56';
+        disconnectButton.textContent = 'Desconectar';
+        disconnectButton.onclick = disconnect;
+        disconnectButton.style.display = 'none';
+
+        form.appendChild(disconnectButton);
+
+        // Atualizar visibilidade dos botões baseado no estado da conexão
+        function updateButtonsVisibility() {
+            const connectButton = form.querySelector('button[type="submit"]');
+            connectButton.style.display = isConnected ? 'none' : 'block';
+            disconnectButton.style.display = isConnected ? 'block' : 'none';
+        }
+
+        // Observar mudanças no estado da conexão
+        Object.defineProperty(window, 'isConnected', {
+            set: function(value) {
+                this._isConnected = value;
+                updateButtonsVisibility();
+            },
+            get: function() {
+                return this._isConnected;
+            }
+        });
+
+        // Package details database
+        const packageDetails = {
+            'Nginx': {
+                icon: '🌐',
+                complexity: 'Moderado',
+                description: 'Servidor web de alto desempenho, balanceador de carga e proxy reverso.',
+                features: 'Balanceamento de carga, proxy reverso, servir arquivos estáticos, SSL/TLS, compressão gzip, cache de conteúdo, virtual hosts, módulos dinâmicos, WebSocket.',
+                requirements: 'Mínimo de 512MB de RAM, 1GB de espaço em disco, Linux/Unix, porta 80/443 disponível.',
+                installation: 'sudo apt-get update\nsudo apt-get install nginx\nsudo systemctl start nginx\nsudo systemctl enable nginx'
+            },
+            'Apache': {
+                icon: '🌐',
+                complexity: 'Moderado',
+                description: 'Servidor web mais popular do mundo, conhecido por sua flexibilidade e extensibilidade.',
+                features: 'Módulos dinâmicos, virtual hosts, rewrite rules, autenticação, SSL/TLS, .htaccess, MPM (Multi-Processing Modules), mod_security.',
+                requirements: 'Mínimo de 512MB de RAM, 1GB de espaço em disco, Linux/Unix/Windows, porta 80/443 disponível.',
+                installation: 'sudo apt-get update\nsudo apt-get install apache2\nsudo systemctl start apache2\nsudo systemctl enable apache2'
+            },
+            'Node.js': {
+                icon: '⚡',
+                complexity: 'Moderado',
+                description: 'Ambiente de execução JavaScript construído no motor V8 do Chrome.',
+                features: 'NPM (Node Package Manager), event-driven, non-blocking I/O, suporte a ES6+, debugging integrado, cluster mode.',
+                requirements: 'Mínimo de 512MB de RAM, Git instalado para alguns pacotes.',
+                installation: 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash\nsource ~/.bashrc\nnvm install --lts\nnvm use --lts'
+            },
+            'PM2': {
+                icon: '⚡',
+                complexity: 'Moderado',
+                description: 'Gerenciador de processos para aplicações Node.js com recursos avançados.',
+                features: 'Gerenciamento de cluster, monitoramento em tempo real, logs, reinício automático, deploy, integração com Docker.',
+                requirements: 'Node.js instalado, mínimo de 512MB de RAM.',
+                installation: 'npm install -g pm2\npm2 startup'
+            },
+            'Supervisor': {
+                icon: '👀',
+                complexity: 'Moderado',
+                description: 'Sistema de controle de processos para Linux, mantém programas rodando continuamente.',
+                features: 'Reinício automático, logs, controle via interface web, notificações por email, grupos de processos.',
+                requirements: 'Python 2.7+, Linux/Unix.',
+                installation: 'sudo apt-get update\nsudo apt-get install supervisor\nsudo systemctl start supervisor\nsudo systemctl enable supervisor'
+            },
+            'Forever': {
+                icon: '♾️',
+                complexity: 'Moderado',
+                description: 'CLI simples para garantir que scripts Node.js rodem continuamente.',
+                features: 'Reinício automático, logs, múltiplos scripts, CLI intuitiva.',
+                requirements: 'Node.js instalado.',
+                installation: 'npm install -g forever'
+            },
+            'MySQL': {
+                icon: '💾',
+                complexity: 'Moderado',
+                description: 'Sistema de gerenciamento de banco de dados relacional mais popular do mundo.',
+                features: 'ACID compliance, replicação, particionamento, stored procedures, triggers, views, transactions.',
+                requirements: 'Mínimo 1GB RAM, 2GB espaço em disco.',
+                installation: 'sudo apt-get update\nsudo apt-get install mysql-server'
+            },
+            'PostgreSQL': {
+                icon: '💾',
+                complexity: 'Moderado',
+                description: 'Sistema de banco de dados objeto-relacional avançado com forte conformidade com padrões.',
+                features: 'ACID compliance, tipos de dados customizados, herança de tabelas, multi-version concurrency control (MVCC).',
+                requirements: 'Mínimo 1GB RAM, 2GB espaço em disco.',
+                installation: 'sudo apt-get update\nsudo apt-get install postgresql postgresql-contrib\nsudo systemctl start postgresql\nsudo systemctl enable postgresql'
+            },
+            'MongoDB': {
+                icon: '💾',
+                complexity: 'Moderado',
+                description: 'Banco de dados NoSQL orientado a documentos, altamente escalável.',
+                features: 'Documentos JSON, índices, agregação, sharding, replicação, consultas ad hoc.',
+                requirements: 'Mínimo 1GB RAM, 2GB espaço em disco.',
+                installation: 'sudo apt-get update\nsudo apt-get install mongodb\nsudo systemctl start mongodb\nsudo systemctl enable mongodb'
+            },
+            'MariaDB': {
+                icon: '🦈',
+                complexity: 'Moderado',
+                description: 'Fork do MySQL com foco em performance e recursos adicionais.',
+                features: 'Compatibilidade com MySQL, storage engines avançados, Galera Cluster, melhor performance.',
+                requirements: 'Mínimo 1GB RAM, 2GB espaço em disco.',
+                installation: 'sudo apt-get update\nsudo apt-get install mariadb-server'
+            },
+            'Docker': {
+                icon: '🐳',
+                complexity: 'Moderado',
+                description: 'Plataforma para desenvolvimento, envio e execução de aplicações em containers.',
+                features: 'Containers isolados, Docker Hub, Dockerfile, Docker Compose, redes virtuais, volumes.',
+                requirements: 'Linux 64-bit, kernel 3.10+, 2GB RAM.',
+                installation: 'curl -fsSL https://get.docker.com | sh\nsudo systemctl start docker\nsudo systemctl enable docker'
+            },
+            'Docker Compose': {
+                icon: '🐳',
+                complexity: 'Moderado',
+                description: 'Ferramenta para definir e executar aplicações Docker multi-container.',
+                features: 'YAML configuration, gerenciamento de dependências, volumes compartilhados, redes customizadas.',
+                requirements: 'Docker instalado.',
+                installation: 'sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose\nsudo chmod +x /usr/local/bin/docker-compose'
+            },
+            'Kubernetes': {
+                icon: '⚓',
+                complexity: 'Avançado',
+                description: 'Sistema de orquestração de containers para automação de deploy, scaling e gerenciamento.',
+                features: 'Auto-scaling, self-healing, service discovery, load balancing, rolling updates.',
+                requirements: 'Mínimo 2GB RAM por node, Docker instalado.',
+                installation: 'curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -\necho "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list\nsudo apt-get update\nsudo apt-get install kubeadm kubelet kubectl'
+            },
+            'Netdata': {
+                icon: '📊',
+                complexity: 'Moderado',
+                description: 'Sistema de monitoramento em tempo real para servidores, containers e aplicações.',
+                features: 'Monitoramento em tempo real, milhares de métricas, alertas, visualização web.',
+                requirements: 'Linux, 256MB RAM.',
+                installation: 'bash <(curl -Ss https://my-netdata.io/kickstart.sh)'
+            },
+            'Nagios': {
+                icon: '📈',
+                complexity: 'Moderado',
+                description: 'Sistema de monitoramento de infraestrutura para servidores, switches, aplicações e serviços.',
+                features: 'Monitoramento de rede, notificações, escalação de problemas, relatórios.',
+                requirements: 'Linux, Apache, PHP, 512MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install nagios4'
+            },
+            'Grafana': {
+                icon: '📊',
+                complexity: 'Moderado',
+                description: 'Plataforma de análise e visualização de métricas.',
+                features: 'Dashboards customizáveis, alertas, anotações, múltiplas fontes de dados.',
+                requirements: 'Mínimo 256MB RAM, banco de dados.',
+                installation: 'sudo apt-get update\nsudo apt-get install grafana\nsudo systemctl start grafana-server\nsudo systemctl enable grafana-server'
+            },
+            'Prometheus': {
+                icon: '📈',
+                complexity: 'Moderado',
+                description: 'Sistema de monitoramento e alerta com poderoso modelo de dados multidimensional.',
+                features: 'Coleta de métricas, alertas, PromQL, service discovery.',
+                requirements: 'Mínimo 512MB RAM.',
+                installation: 'wget https://github.com/prometheus/prometheus/releases/download/v2.30.3/prometheus-2.30.3.linux-amd64.tar.gz\ntar xvfz prometheus-*.tar.gz\ncd prometheus-*\n./prometheus'
+            },
+            'Fail2ban': {
+                icon: '🚫',
+                complexity: 'Moderado',
+                description: 'Framework de prevenção de intrusões para proteção contra ataques de força bruta.',
+                features: 'Análise de logs, banimento de IPs, suporte a múltiplos serviços, notificações.',
+                requirements: 'Python 2.7+.',
+                installation: 'sudo apt-get update\nsudo apt-get install fail2ban\nsudo systemctl start fail2ban\nsudo systemctl enable fail2ban'
+            },
+            'UFW': {
+                icon: '🔥',
+                complexity: 'Moderado',
+                description: 'Firewall simplificado para Ubuntu/Debian.',
+                features: 'Interface simples, IPv6, logging, rate limiting.',
+                requirements: 'Ubuntu/Debian.',
+                installation: 'sudo apt-get update\nsudo apt-get install ufw\nsudo ufw enable'
+            },
+            'ClamAV': {
+                icon: '🦠',
+                complexity: 'Moderado',
+                description: 'Antivírus open source para detecção de trojans, vírus, malware e outras ameaças.',
+                features: 'Scanning em tempo real, updates automáticos, interface web.',
+                requirements: 'Mínimo 512MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install clamav clamav-daemon\nsudo systemctl start clamav-daemon'
+            },
+            'ModSecurity': {
+                icon: '🔒',
+                complexity: 'Moderado',
+                description: 'Firewall de aplicação web (WAF) para Apache, Nginx e IIS.',
+                features: 'Proteção contra SQL injection, XSS, CSRF, regras OWASP.',
+                requirements: 'Apache/Nginx instalado.',
+                installation: 'sudo apt-get update\nsudo apt-get install libapache2-mod-security2\nsudo a2enmod security2\nsudo systemctl restart apache2'
+            },
+            'Redis': {
+                icon: '💾',
+                complexity: 'Moderado',
+                description: 'Armazenamento de estrutura de dados em memória, usado como banco de dados, cache e message broker.',
+                features: 'In-memory storage, persistência, replicação, Lua scripting, transactions.',
+                requirements: 'Mínimo 512MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install redis-server\nsudo systemctl start redis-server\nsudo systemctl enable redis-server'
+            },
+            'Memcached': {
+                icon: '💾',
+                complexity: 'Moderado',
+                description: 'Sistema de cache de memória distribuído de alto desempenho.',
+                features: 'Cache distribuído, protocolo simples, suporte a múltiplas linguagens.',
+                requirements: 'Mínimo 64MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install memcached\nsudo systemctl start memcached\nsudo systemctl enable memcached'
+            },
+            'Varnish': {
+                icon: '🚀',
+                complexity: 'Moderado',
+                description: 'Cache HTTP reverso de alto desempenho.',
+                features: 'VCL (Varnish Configuration Language), purging, ESI, clustering.',
+                requirements: 'Mínimo 512MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install varnish\nsudo systemctl start varnish\nsudo systemctl enable varnish'
+            },
+            'Postfix': {
+                icon: '📨',
+                complexity: 'Moderado',
+                description: 'Servidor de email (MTA) rápido, fácil de administrar e seguro.',
+                features: 'SMTP, TLS, autenticação, anti-spam, virtual domains.',
+                requirements: 'Mínimo 256MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install postfix\nsudo systemctl start postfix\nsudo systemctl enable postfix'
+            },
+            'Dovecot': {
+                icon: '📬',
+                complexity: 'Moderado',
+                description: 'Servidor IMAP e POP3 seguro para sistemas Linux/UNIX.',
+                features: 'IMAP/POP3, SSL/TLS, SASL, sieve filters, virtual users.',
+                requirements: 'Mínimo 256MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install dovecot-imapd dovecot-pop3d\nsudo systemctl start dovecot\nsudo systemctl enable dovecot'
+            },
+            'Roundcube': {
+                icon: '✉️',
+                complexity: 'Moderado',
+                description: 'Cliente de webmail de código aberto com interface moderna.',
+                features: 'Interface AJAX, plugins, suporte a múltiplos idiomas, endereçamento.',
+                requirements: 'Apache/Nginx, PHP, MySQL/PostgreSQL.',
+                installation: 'sudo apt-get update\nsudo apt-get install roundcube roundcube-mysql\nsudo systemctl restart apache2'
+            },
+            'WordPress': {
+                icon: '📝',
+                complexity: 'Moderado',
+                description: 'Sistema de gerenciamento de conteúdo mais popular do mundo.',
+                features: 'Temas, plugins, SEO-friendly, multisite, API REST.',
+                requirements: 'PHP 7.4+, MySQL 5.7+, Apache/Nginx.',
+                installation: 'sudo apt-get update\nsudo apt-get install wordpress\nsudo ln -s /usr/share/wordpress /var/www/html/wordpress'
+            },
+            'Laravel': {
+                icon: '🎵',
+                complexity: 'Moderado',
+                description: 'Framework PHP elegante para desenvolvimento web.',
+                features: 'Eloquent ORM, Blade templating, Artisan CLI, testing, security.',
+                requirements: 'PHP 7.3+, Composer.',
+                installation: 'composer global require laravel/installer\nlaravel new project'
+            },
+            'Django': {
+                icon: '🐍',
+                complexity: 'Moderado',
+                description: 'Framework web Python de alto nível que incentiva o desenvolvimento rápido e limpo.',
+                features: 'ORM, admin interface, autenticação, cache, templates.',
+                requirements: 'Python 3.6+, pip.',
+                installation: 'pip install django\ndjango-admin startproject myproject'
+            },
+            'Rails': {
+                icon: '💎',
+                complexity: 'Moderado',
+                description: 'Framework web Ruby focado em produtividade e convenção sobre configuração.',
+                features: 'Active Record, Action Pack, Action Mailer, Asset Pipeline.',
+                requirements: 'Ruby 2.7+, SQLite/PostgreSQL/MySQL.',
+                installation: 'gem install rails\nrails new myapp'
+            },
+            'GitLab': {
+                icon: '📦',
+                complexity: 'Avançado',
+                description: 'Plataforma DevOps completa com gerenciamento de repositórios Git.',
+                features: 'CI/CD, registry, issues, wiki, code review, monitoring.',
+                requirements: 'Mínimo 4GB RAM, 2 cores CPU.',
+                installation: 'curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | sudo bash\nsudo apt-get install gitlab-ce\nsudo gitlab-ctl reconfigure'
+            },
+            'Gitea': {
+                icon: '🐱',
+                complexity: 'Moderado',
+                description: 'Serviço Git auto-hospedado leve e fácil de instalar.',
+                features: 'Interface web, issues, pull requests, webhooks, API.',
+                requirements: 'Mínimo 512MB RAM.',
+                installation: 'wget -O gitea https://dl.gitea.io/gitea/1.15.0/gitea-1.15.0-linux-amd64\nchmod +x gitea\n./gitea web'
+            },
+            'Gogs': {
+                icon: '🐶',
+                complexity: 'Moderado',
+                description: 'Sistema de hospedagem Git simples e leve.',
+                features: 'Interface web, activity timeline, issue tracking, markdown.',
+                requirements: 'Mínimo 256MB RAM.',
+                installation: 'wget https://dl.gogs.io/0.12.3/gogs_0.12.3_linux_amd64.tar.gz\ntar -xzf gogs_0.12.3_linux_amd64.tar.gz\ncd gogs\n./gogs web'
+            },
+            'Webmin': {
+                icon: '🔒',
+                complexity: 'Moderado',
+                description: 'Interface web para administração de sistemas Unix.',
+                features: 'Gerenciamento de usuários, serviços, arquivos, backups.',
+                requirements: 'Perl 5, root access.',
+                installation: 'wget http://prdownloads.sourceforge.net/webadmin/webmin_1.974_all.deb\ndpkg --install webmin_1.974_all.deb\napt-get -f install'
+            },
+            'Cockpit': {
+                icon: '🚀',
+                complexity: 'Moderado',
+                description: 'Interface web moderna para administração de servidores Linux.',
+                features: 'Monitoramento, logs, containers, storage, networking.',
+                requirements: 'Linux com systemd.',
+                installation: 'sudo apt-get update\nsudo apt-get install cockpit\nsudo systemctl start cockpit'
+            },
+            'Ajenti': {
+                icon: '⚙️',
+                complexity: 'Moderado',
+                description: 'Painel de controle modular para administração de servidores.',
+                features: 'Plugins, SSL, multi-server, file manager, terminal.',
+                requirements: 'Python 3.5+.',
+                installation: 'curl https://raw.githubusercontent.com/ajenti/ajenti/master/scripts/install.sh | sudo bash'
+            },
+            'HAProxy': {
+                icon: '⚡',
+                complexity: 'Moderado',
+                description: 'Balanceador de carga TCP/HTTP de alta performance e proxy reverso.',
+                features: 'Balanceamento de carga, SSL termination, health checks, compressão, stick tables, ACLs.',
+                requirements: 'Mínimo 512MB RAM, Linux/Unix.',
+                installation: 'sudo apt-get update\nsudo apt-get install haproxy -y\nsudo systemctl start haproxy\nsudo systemctl enable haproxy'
+            },
+            'Caddy': {
+                icon: '📡',
+                complexity: 'Básico',
+                description: 'Servidor web moderno com suporte automático a HTTPS.',
+                features: 'HTTPS automático, configuração simples, proxy reverso, templates.',
+                requirements: 'Mínimo 512MB RAM, Linux/Unix.',
+                installation: 'sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https\ncurl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg\nsudo apt-get update\nsudo apt-get install caddy -y'
+            },
+            'CouchDB': {
+                icon: '💾',
+                complexity: 'Moderado',
+                description: 'Banco de dados NoSQL orientado a documentos com suporte a replicação.',
+                features: 'Replicação bidirecional, API REST, MapReduce, documentos JSON.',
+                requirements: 'Mínimo 1GB RAM, 2GB espaço em disco.',
+                installation: 'sudo apt-get update\nsudo apt-get install couchdb -y\nsudo systemctl start couchdb\nsudo systemctl enable couchdb'
+            },
+            'Cassandra': {
+                icon: '💾',
+                complexity: 'Avançado',
+                description: 'Banco de dados NoSQL distribuído de alta escalabilidade.',
+                features: 'Escalabilidade linear, tolerância a falhas, replicação multi-datacenter.',
+                requirements: 'Mínimo 4GB RAM, Java 8+.',
+                installation: 'echo "deb https://debian.cassandra.apache.org 41x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list\ncurl https://downloads.apache.org/cassandra/KEYS | sudo apt-key add -\nsudo apt-get update\nsudo apt-get install cassandra -y\nsudo systemctl start cassandra'
+            },
+            'PiVPN': {
+                icon: '🔑',
+                complexity: 'Básico',
+                description: 'Instalador simplificado de VPN que automatiza a configuração do OpenVPN ou WireGuard em sistemas Linux.',
+                features: [
+                    'Interface de linha de comando simplificada',
+                    'Suporte para OpenVPN e WireGuard',
+                    'Geração automática de certificados',
+                    'Gerenciamento fácil de usuários',
+                    'Compatível com todos os dispositivos (Android, iOS, Windows, Linux, Mac)',
+                    'Configuração automática de portas e firewall',
+                    'Geração de QR code para configuração mobile'
+                ].join('\n'),
+                requirements: [
+                    'Sistema operacional Linux (Ubuntu/Debian recomendado)',
+                    'Mínimo 512MB RAM',
+                    'Porta 1194 liberada (padrão)',
+                    'IP público fixo ou DDNS configurado'
+                ].join('\n'),
+                installation: [
+                    'curl -L https://install.pivpn.io | bash',
+                    '# Seguir o assistente de instalação interativo',
+                    '# Para adicionar um novo usuário após instalação:',
+                    'pivpn add',
+                    '#Recomendado dar comando via terminal diretamente, via web não vai funcionar corretamente',
+                    'site: https://www.pivpn.io/'
+                ].join('\n')
+               
+            },
+            'Snort': {
+                icon: '🛂',
+                complexity: 'Avançado',
+                description: 'Sistema de detecção e prevenção de intrusões (IDS/IPS).',
+                features: 'Análise de pacotes em tempo real, detecção de ataques, logging.',
+                requirements: 'Mínimo 2GB RAM, interface de rede em modo promíscuo.',
+                installation: 'sudo apt-get update\nsudo apt-get install snort -y\nsudo systemctl start snort\nsudo systemctl enable snort'
+            },
+            'Zabbix': {
+                icon: '📊',
+                complexity: 'Avançado',
+                description: 'Sistema enterprise de monitoramento de rede e aplicações.',
+                features: 'Monitoramento distribuído, alertas, visualização, automação.',
+                requirements: 'Mínimo 2GB RAM, MySQL/PostgreSQL.',
+                installation: 'wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4%2Bubuntu22.04_all.deb\nsudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb\nsudo apt-get update\nsudo apt-get install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent -y'
+            },
+            'RabbitMQ': {
+                icon: '🐰',
+                complexity: 'Moderado',
+                description: 'Broker de mensagens robusto e confiável.',
+                features: 'Suporte a múltiplos protocolos, clustering, interface web.',
+                requirements: 'Mínimo 512MB RAM, Erlang.',
+                installation: 'sudo apt-get update\nsudo apt-get install rabbitmq-server -y\nsudo systemctl start rabbitmq-server\nsudo systemctl enable rabbitmq-server\nsudo rabbitmq-plugins enable rabbitmq_management'
+            },
+            'Apache Kafka': {
+                icon: '🐰',
+                complexity: 'Avançado',
+                description: 'Plataforma distribuída de streaming de eventos.',
+                features: 'Alta throughput, escalabilidade horizontal, replicação.',
+                requirements: 'Mínimo 4GB RAM, Java 8+, ZooKeeper.',
+                installation: 'sudo apt-get update\nsudo apt-get install default-jdk -y\nwget https://downloads.apache.org/kafka/3.5.0/kafka_2.13-3.5.0.tgz\ntar xzf kafka_2.13-3.5.0.tgz\ncd kafka_2.13-3.5.0'
+            },
+            'PHP': {
+                icon: '⚙️',
+                complexity: 'Moderado',
+                description: 'Linguagem de programação para criar páginas web.',
+                features: 'Orientado a objetos, código aberto, suporte a múltiplas bases de dados.',
+                requirements: 'Servidor web, MySQL/PostgreSQL.',
+                installation: 'sudo apt-get update\nsudo apt-get install php'
+            },
+            'Python': {
+                icon: '🐍',
+                complexity: 'Moderado',
+                description: 'Linguagem de programação interpretada de alto nível.',
+                features: 'Código aberto, orientado a objetos, suporte a múltiplas bases de dados.',
+                requirements: 'Servidor web, MySQL/PostgreSQL.',
+                installation: 'sudo apt-get update\nsudo apt-get install python3'
+            },
+            'Ruby': {
+                icon: '💎',
+                complexity: 'Moderado',
+                description: 'Linguagem de programação interpretada de alto nível.',
+                features: 'Código aberto, orientado a objetos, suporte a múltiplas bases de dados.',
+                requirements: 'Servidor web, MySQL/PostgreSQL.',
+                installation: 'sudo apt-get update\nsudo apt-get install ruby'
+            },
+            'Git': {
+                icon: '📦',
+                complexity: 'Moderado',
+                description: 'Sistema de controle de versões distribuído.',
+                features: 'Controle de versões, branches, merge, repositórios remotos.',
+                requirements: 'Mínimo 256MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install git'
+            },
+            'Jenkins': {
+                icon: '🔄',
+                complexity: 'Moderado',
+                description: 'Ferramenta de automação de integração contínua.',
+                features: 'Integração contínua, automação de build, testes, deploy.',
+                requirements: 'Mínimo 512MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install jenkins'
+            },
+            'Linux': {
+                icon: '🐧',
+                complexity: 'Moderado',
+                description: 'Sistema operacional de código aberto.',
+                features: 'Kernel, sistema de arquivos, gerenciamento de processos, suporte a múltiplas arquiteturas.',
+                requirements: 'Mínimo 512MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install linux-image-amd64'
+            },
+            'Ubuntu': {
+                icon: '🐧',
+                complexity: 'Moderado',
+                description: 'Distribuição Linux baseada no Debian.',
+                features: 'Sistema de gerenciamento de pacotes, interface gráfica, suporte a múltiplas arquiteturas.',
+                requirements: 'Mínimo 1GB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install ubuntu'
+            },
+            'CentOS': {
+                icon: '🐧',
+                complexity: 'Moderado',
+                description: 'Distribuição Linux baseada no Red Hat.',
+                features: 'Sistema de gerenciamento de pacotes, suporte a múltiplas arquiteturas.',
+                requirements: 'Mínimo 1GB RAM.',
+                installation: 'sudo yum update\nsudo yum install centos-release-openstack-queens'
+            },
+            'Ansible': {
+                icon: '🔧',
+                complexity: 'Moderado',
+                description: 'Ferramenta de automação de infraestrutura como código.',
+                features: 'Automatização de configuração, gerenciamento de infraestrutura.',
+                requirements: 'Mínimo 512MB RAM.',
+                installation: 'sudo apt-get update\nsudo apt-get install ansible'
+            }
+        };
+
+        // Modal functionality
+        const modal = document.getElementById('packageModal');
+        const closeModal = modal.querySelector('.modal-close');
+        const closeModalButton = modal.querySelector('.close-modal');
+        const copyCommandButton = modal.querySelector('.copy-command');
+        let currentPackageButton = null;
+        let currentInstallCommand = '';
+
+        function showPackageDetails(packageButton) {
+            const packageName = packageButton.querySelector('.package-name').textContent;
+            const details = packageDetails[packageName] || {
+                icon: packageButton.querySelector('.package-icon').textContent,
+                description: packageButton.querySelector('.package-description').textContent,
+                features: 'Informações detalhadas em breve.',
+                requirements: 'Requisitos específicos em breve.',
+                installation: 'Comandos de instalação em breve.'
+            };
+
+            modal.querySelector('.modal-icon').textContent = details.icon;
+            modal.querySelector('.modal-title').textContent = packageName;
+            modal.querySelector('.description').textContent = details.description;
+            modal.querySelector('.features').textContent = details.features;
+            modal.querySelector('.requirements').textContent = details.requirements;
+            modal.querySelector('.installation').textContent = details.installation;
+            currentInstallCommand = details.installation;
+
+            currentPackageButton = packageButton;
+            modal.classList.add('show');
+        }
+
+        function hideModal() {
+            modal.classList.remove('show');
+        }
+
+        async function copyToTerminal(command) {
+            if (!isConnected) {
+                showStatus('Por favor, conecte-se ao servidor primeiro!', true);
+                return;
+            }
+
+            const commands = command.split('\n');
+            let success = true;
+
+            try {
+                for (const cmd of commands) {
+                    if (cmd.trim()) {
+                        appendToTerminal(`\nExecutando: ${cmd.trim()}`);
+                        commandInput.value = cmd.trim();
+                        
+                        const event = new KeyboardEvent('keypress', {
+                            key: 'Enter',
+                            code: 'Enter',
+                            keyCode: 13,
+                            which: 13,
+                            bubbles: true
+                        });
+                        
+                        // Enviar comando
+                        commandInput.dispatchEvent(event);
+                        
+                        // Aguardar resposta do comando (3 segundos por comando)
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        
+                        // Verificar se houve erro na saída do último comando
+                        const lastOutput = terminalContent.lastChild;
+                        if (lastOutput && lastOutput.style.color === 'rgb(255, 95, 86)') { // Cor de erro
+                            success = false;
+                            appendToTerminal(`Erro ao executar: ${cmd.trim()}`, true);
+                            break;
+                        }
+                    }
+                }
+
+                if (success) {
+                    showStatus('Instalação concluída com sucesso!');
+                } else {
+                    showStatus('Houve um erro durante a instalação. Verifique o terminal para mais detalhes.', true);
+                }
+            } catch (error) {
+                showStatus(`Erro durante a instalação: ${error.message}`, true);
+                appendToTerminal(`Erro: ${error.message}`, true);
+            }
+        }
+
+        // Event Listeners for modal
+        document.querySelectorAll('.package-button').forEach(button => {
+            button.addEventListener('click', () => showPackageDetails(button));
+        });
+
+        closeModal.addEventListener('click', hideModal);
+        closeModalButton.addEventListener('click', hideModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) hideModal();
+        });
+
+        copyCommandButton.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(currentInstallCommand);
+                showStatus('Iniciando instalação...');
+                copyToTerminal(currentInstallCommand);
+                hideModal();
+            } catch (err) {
+                showStatus('Erro ao iniciar instalação: ' + err.message, true);
+            }
+        });
+    </script>
+</body>
+</html> 
